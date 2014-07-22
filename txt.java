@@ -1,18 +1,23 @@
-package writer;
+package formatsToPrint;
+
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 
+import formatHelper.*;
 import alien.details.Details;
 
-public class WriteText
+
+public class txt implements printFormatHelper
 {
     FileOutputStream fileoutput; 
     PrintWriter printWrite;
-    public void writeToText(Details detail)
-    {
-    	try
+    
+    @Override
+	public void printToFormat(Details detail)
+	{
+		try
 		{
 			fileoutput = new FileOutputStream("c:/"+detail.getCodeName()+".txt");		//create a new File
 			printWrite = new PrintWriter(fileoutput);
@@ -49,7 +54,8 @@ public class WriteText
 			printWrite.write("_");  //print 100 "_" to draw a line below the data line
 		}
         printWrite.close();
-    }
+		
+	}
     
     public void writeCenterAlign(String str,PrintWriter printWrite) //custom logic which writes the data in the center as per the fields in the text file
     {
@@ -57,9 +63,7 @@ public class WriteText
     	int constantLen=20;				//the average length of the headers in the text file
     	int extraLen=constantLen-len;   //find out the extra space left
     	int margin=extraLen/2; 			//the amount of space to be left on both sides so that the data appears to be on the center
-    	
-    	
-    	
+       	
     	for(int i=0;i<margin;i++)		//add spaces to the left side
     	{
     		printWrite.write(" ");
@@ -73,5 +77,4 @@ public class WriteText
     	
     	printWrite.write("|");			//add a separator
     }
-    
 }
