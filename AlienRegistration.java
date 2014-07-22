@@ -1,9 +1,11 @@
 package main.application;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Scanner;
 
-import writer.WritePdf;
-import writer.WriteText;
+import formatHelper.ClassEnumerator;
 import alien.details.Details;
 
 /*
@@ -26,7 +28,7 @@ Scanner scanner = new Scanner(System.in); 		   //scanner object to take input fr
 public static void main(String... args)
 {
 	AlienRegistration myAlienRegistration=new AlienRegistration();    //Create the object of the main class to run the system
-	myAlienRegistration.showMenu();									                  //show the main menu
+	myAlienRegistration.showMenu();									  //show the main menu
 }
 
 
@@ -56,27 +58,113 @@ public void showMenu()
 	}
 }
 
-
-public void showPrintChoice(Details detail)  //show the choice for options to print the details
-{											 //you can add a choice here to add a new format
-	String whatFormat = null;
-	System.out.println("\n\n\n\nIn what format do you want the file to be printed ?");
-	System.out.println("\ninput \"PDF\" for Portable Document Format or \"TEXT\" for simple Text \n");
-	whatFormat=scanner.nextLine();
-	if(whatFormat.contains("PDF")||whatFormat.contains("Pdf")||whatFormat.contains("pdf"))
+private void showPrintChoice(Details myAlienDetails)
+{
+	int counter=0;
+	int size=0;
+	boolean validFormat=false;	//flag to reflect if user choice was a valid and existing format
+	String desiredFormat=null;	//variable to store user's choice of format
+	Class<?> formatClass = null; //variable to store the Class object
+	
+	/*Get all the classes (formats) available under the package "formatsToPrint"*/
+	List<Class<?>> classes = ClassEnumerator.getClassesForPackage("formatsToPrint");
+	size=classes.size();
+	
+	System.out.print("Input the formats in the console to print your details out [");
+	
+	for (Class<?> tempClassList : classes ) //iterate through the number of classes present
 	{
-		WritePdf pdfWriter = new WritePdf();
-		pdfWriter.writeToPdf(detail);
+	counter++;		//increment the counter
+	System.out.print(tempClassList.getSimpleName());	//print the names of the classes
+	if(!(size==counter))
+		System.out.print(",");
 	}
-	else if(whatFormat.contains("TEXT")||whatFormat.contains("Text")||whatFormat.contains("text"))
+	System.out.println("]");
+	
+	desiredFormat=scanner.nextLine(); //take the name of the desired format from the user
+	
+	
+	for (Class<?> tempClassList : classes ) //iterate through the number of classes present again
 	{
-		WriteText textWriter=new WriteText();
-		textWriter.writeToText(detail);
+	if(tempClassList.getSimpleName().equals(desiredFormat))	//iterate all the present formats available and see if they match
+	validFormat=true;										// the user input, if it does then set validFormat to true
 	}
-	else
+	
+	if(validFormat==false)		//if the flag is still false, exit the app
 	{
-		System.out.println("Sorry, bad choice, program with quit now.");
+		System.out.println("Sorry, you have selected a invalid format, cannot proceed. System will exit !");
+		System.exit(0);
 	}
+	else		//if the flag is true, it means there was a match and we can proceed to the printing part !
+	{
+		try
+		{
+			formatClass = Class.forName("formatsToPrint."+desiredFormat);  //try and get the "Class" type object of the format
+		}
+		
+		catch (ClassNotFoundException e)
+		{
+			System.out.println("The class "+desiredFormat+" was not found !");	//class not found, hence exit
+			System.exit(0);
+		}
+		
+		try
+		{
+			Object obj=formatClass.getConstructor().newInstance();		//with the "Class" type object make a instance of the format class
+			try
+			{
+				
+				final Method printer=formatClass.getMethod("printToFormat", Details.class);	//make a Method Object (the method which has printing logic)
+				printer.invoke(obj, myAlienDetails);		//invoke the method using the instance of the format class and Details object(as parameter containing data to print)
+			}
+			
+			catch (SecurityException | NoSuchMethodException e)
+			{
+				System.out.println("Bad format class! Replace your format class and try with a proper one.");
+				System.exit(0); //quit
+				//e.printStackTrace();
+			}
+			
+		}
+		
+		/*******************various exceptions which may occur while getting a instance from the class name*******************/
+		catch (IllegalArgumentException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.exit(0); //quit
+		}
+		catch (SecurityException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.exit(0); //quit
+		}
+		catch (InstantiationException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.exit(0); //quit
+		}
+		catch (IllegalAccessException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.exit(0); //quit
+		}
+		catch (InvocationTargetException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.exit(0); //quit
+		}
+		catch (NoSuchMethodException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.exit(0); //quit
+		}
+	}	
 }
 
 public void getAlienData()
@@ -133,7 +221,8 @@ public void getAlienData()
 	validData=false;									//reset flag
 	
 	/*******************************Finally ask the user to choose the format****************************/
-	showPrintChoice(myAlienDetails);	
+	//showPrintChoice(myAlienDetails);	
+	showPrintChoice(myAlienDetails);		// call the method which asks user to choose the format to print 
 }
 
 }
