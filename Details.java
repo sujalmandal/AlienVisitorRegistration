@@ -102,6 +102,4 @@ public String getNoOfLegs()
 public String getNoOfAntennas()
 {
 	return noOfAntennas;
-}
-
-}
+}}
